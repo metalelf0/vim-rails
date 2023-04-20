@@ -2174,13 +2174,13 @@ function! s:BufNavCommands() abort
   if get(g:, 'rails_no_alternate_commands', 0)
     return
   endif
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_alternate A   exe s:Alternate('<mods> E<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_alternate AE  exe s:Alternate('<mods> E<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_alternate AS  exe s:Alternate('<mods> S<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_alternate AV  exe s:Alternate('<mods> V<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_alternate AT  exe s:Alternate('<mods> T<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_edit      AD  exe s:Alternate('<mods> D<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_edit      AR  exe s:Alternate('<mods> D<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -bang -range=0 -complete=customlist,s:Complete_related A     :exe s:Alternate('E<bang>',<line1>,<line2>,<count>,<bang>0,<f-args>)
+  command! -buffer -bar -nargs=* -bang -range=0 -complete=customlist,s:Complete_related AE    :exe s:Alternate('E<bang>',<line1>,<line2>,<count>,<bang>0,<f-args>)
+  command! -buffer -bar -nargs=* -bang -range=0 -complete=customlist,s:Complete_related AS    :exe s:Alternate('S<bang>',<line1>,<line2>,<count>,<bang>0,<f-args>)
+  command! -buffer -bar -nargs=* -bang -range=0 -complete=customlist,s:Complete_related AV    :exe s:Alternate('V<bang>',<line1>,<line2>,<count>,<bang>0,<f-args>)
+  command! -buffer -bar -nargs=* -bang -range=0 -complete=customlist,s:Complete_related AT    :exe s:Alternate('T<bang>',<line1>,<line2>,<count>,<bang>0,<f-args>)
+  command! -buffer -bar -nargs=* -bang -range=0 -complete=customlist,s:Complete_related AD    :exe s:Alternate('D<bang>',<line1>,<line2>,<count>,<bang>0,<f-args>)
+  command! -buffer -bar -nargs=* -bang -range=0 -complete=customlist,s:Complete_related AR    :exe s:Alternate('D<bang>',<line1>,<line2>,<count>,<bang>0,<f-args>)
 endfunction
 
 function! s:jumpargs(file, jump) abort
@@ -3601,7 +3601,21 @@ function! s:AR(cmd,related,line1,line2,count,...) abort
   endif
 endfunction
 
-function! s:Alternate(cmd,line1,line2,count,...) abort
+function s:AlternateBang(cmd, ...) abort
+  let file = rails#buffer().alternate()
+  let has_path = !empty(file) && rails#app().has_path(file)
+  if !has_path
+    return s:find(a:cmd, rails#app().path(file."!"))
+  else
+    return s:find(a:cmd, rails#app().path(file))
+  endif
+endfunction
+
+function! s:Alternate(cmd,line1,line2,count,bang,...) abort
+  if a:bang
+    return call('s:AlternateBang',[a:cmd,a:line1,a:line2,a:count]+a:000)
+  endif
+
   return call('s:AR',[a:cmd,0,a:line1,a:line2,a:count]+a:000)
 endfunction
 
